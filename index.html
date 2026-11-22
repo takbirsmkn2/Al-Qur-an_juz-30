@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="id" class="scroll-smooth">
 <head>
@@ -1518,4 +1517,1105 @@
                 return `
                     <button onclick="selectSurahFromSidebar(${s.number})" class="w-full text-left px-3 py-2.5 rounded-xl flex items-center justify-between gap-2 transition ${isActive ? 'bg-emerald-850 text-white dark:bg-gold-500/20 dark:border dark:border-gold-400/50' : 'hover:bg-slate-100 dark:hover:bg-white/5'}">
                         <div class="flex items-center gap-2.5 min-w-0">
-                            <span class="w-7 h-7 rounded-lg text-xs font-bold flex items-center justify-center shrink-0 ${isActive ? 'bg-gold-500 text-emerald-950' : 'bg-emerald-900/10 da
+                            <span class="w-7 h-7 rounded-lg text-xs font-bold flex items-center justify-center shrink-0 ${isActive ? 'bg-gold-500 text-emerald-950' : 'bg-emerald-900/10 dark:bg-white/10 text-emerald-900 dark:text-gold-300'}">${s.number}</span>
+                            <div class="min-w-0">
+                                <p class="text-xs font-bold truncate">${s.englishName}</p>
+                                <p class="text-[10px] truncate ${isActive ? 'text-gold-300' : 'text-slate-500 dark:text-slate-400'}">${meaningId} • ${s.numberOfAyahs} Ayat</p>
+                            </div>
+                        </div>
+                        <span class="font-arabic text-base shrink-0 ${isActive ? 'text-gold-300' : 'text-emerald-900 dark:text-gold-400'}">${s.name.replace('سُورَةُ ', '')}</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function renderJuzList() {
+            const container = document.getElementById('juz-list');
+            container.innerHTML = JUZ_DATA.map(j => `
+                <button onclick="selectJuzFromSidebar(${j.juz}, ${j.surah}, ${j.ayah}, ${j.page})" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 flex items-center justify-between gap-2 transition">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <span class="w-8 h-8 rounded-xl bg-gold-500/20 border border-gold-500/40 text-emerald-900 dark:text-gold-300 font-bold text-xs flex items-center justify-center shrink-0">${j.juz}</span>
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold truncate">Juz ${j.juz} — ${j.name}</p>
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">${j.desc}</p>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-gold-300 shrink-0">Hal ${j.page}</span>
+                </button>
+            `).join('');
+        }
+
+        function renderPageList() {
+            const container = document.getElementById('page-list');
+            let html = '';
+            for (let p = 1; p <= 604; p++) {
+                html += `<button onclick="selectPageFromSidebar(${p})" class="py-2 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-emerald-950 hover:bg-gold-500 hover:text-emerald-950 transition text-center">${p}</button>`;
+            }
+            container.innerHTML = html;
+        }
+
+        function handleSidebarSearch(e) {
+            const q = e.target.value.trim().toLowerCase();
+            document.getElementById('clear-search-btn').classList.toggle('hidden', !q);
+
+            if (state.sidebarTab === 'surah') {
+                const filtered = state.surahs.filter(s => {
+                    const meaning = (SURAH_INDONESIAN_MEANINGS[s.number] || '').toLowerCase();
+                    return s.englishName.toLowerCase().includes(q) ||
+                           meaning.includes(q) ||
+                           String(s.number) === q;
+                });
+                renderSurahList(filtered);
+            } else if (state.sidebarTab === 'juz') {
+                const filtered = JUZ_DATA.filter(j =>
+                    String(j.juz) === q ||
+                    j.name.toLowerCase().includes(q) ||
+                    j.desc.toLowerCase().includes(q)
+                );
+                const container = document.getElementById('juz-list');
+                container.innerHTML = filtered.map(j => `
+                    <button onclick="selectJuzFromSidebar(${j.juz}, ${j.surah}, ${j.ayah}, ${j.page})" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 flex items-center justify-between gap-2 transition">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <span class="w-8 h-8 rounded-xl bg-gold-500/20 border border-gold-500/40 text-emerald-900 dark:text-gold-300 font-bold text-xs flex items-center justify-center shrink-0">${j.juz}</span>
+                            <div class="min-w-0">
+                                <p class="text-xs font-bold truncate">Juz ${j.juz} — ${j.name}</p>
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">${j.desc}</p>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-white/10">Hal ${j.page}</span>
+                    </button>
+                `).join('');
+            } else if (state.sidebarTab === 'page') {
+                const container = document.getElementById('page-list');
+                let html = '';
+                for (let p = 1; p <= 604; p++) {
+                    if (!q || String(p).includes(q)) {
+                        html += `<button onclick="selectPageFromSidebar(${p})" class="py-2 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-emerald-950 hover:bg-gold-500 hover:text-emerald-950 transition text-center">${p}</button>`;
+                    }
+                }
+                container.innerHTML = html;
+            }
+        }
+
+        function clearSidebarSearch() {
+            const input = document.getElementById('sidebar-search');
+            input.value = '';
+            handleSidebarSearch({ target: input });
+        }
+
+        function selectSurahFromSidebar(num) {
+            closeSidebarMobile();
+            if (state.viewMode === 'mushaf') {
+                switchViewMode('study');
+            }
+            loadSurah(num);
+        }
+
+        function selectJuzFromSidebar(juz, surah, ayah, page) {
+            closeSidebarMobile();
+            if (state.viewMode === 'mushaf') {
+                loadMushafPage(page);
+            } else {
+                loadSurah(surah, ayah);
+            }
+        }
+
+        function selectPageFromSidebar(page) {
+            closeSidebarMobile();
+            switchViewMode('mushaf');
+            loadMushafPage(page);
+        }
+
+        // =========================================================
+        // 5. STUDY MODE: FETCH & RENDER SURAH (ARABIC, TAJWID, LATIN, ID)
+        // =========================================================
+        async function loadSurah(surahNumber, targetAyah = null) {
+            state.currentSurahNumber = surahNumber;
+            renderSurahList(state.surahs);
+
+            const container = document.getElementById('ayahs-container');
+            container.innerHTML = `
+                <div class="p-10 text-center rounded-3xl bg-white dark:bg-emerald-925 border border-slate-200 dark:border-emerald-800/70">
+                    <div class="w-10 h-10 border-4 border-gold-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-300">Memuat teks Utsmani, Tajwid &amp; Terjemah Bahasa Indonesia...</p>
+                </div>`;
+
+            try {
+                const url = `https://api.alquran.cloud/v1/surah/${surahNumber}/editions/quran-uthmani,quran-tajweed,en.transliteration,id.indonesian`;
+                const res = await fetch(url);
+                const json = await res.json();
+
+                if (json.code === 200 && json.data.length >= 4) {
+                    const [uthmaniEd, tajweedEd, latinEd, idEd] = json.data;
+                    const mergedAyahs = uthmaniEd.ayahs.map((a, idx) => {
+                        let plainText = a.text;
+                        let tajweedText = tajweedEd.ayahs[idx] ? tajweedEd.ayahs[idx].text : a.text;
+
+                        // Bersihkan prefix Basmalah pada ayat 1 untuk surah selain Al-Fatihah (1) dan At-Taubah (9)
+                        if (surahNumber !== 1 && surahNumber !== 9 && a.numberInSurah === 1) {
+                            plainText = stripLeadingBasmalahPlain(plainText);
+                            tajweedText = stripLeadingBasmalahTajweed(tajweedText);
+                        }
+
+                        return {
+                            number: a.number,
+                            numberInSurah: a.numberInSurah,
+                            juz: a.juz,
+                            page: a.page,
+                            hizbQuarter: a.hizbQuarter,
+                            plainText,
+                            tajweedHtml: parseTajweedMarkup(tajweedText),
+                            latin: latinEd.ayahs[idx] ? latinEd.ayahs[idx].text : '',
+                            translation: idEd.ayahs[idx] ? idEd.ayahs[idx].text : ''
+                        };
+                    });
+
+                    state.currentSurahData = {
+                        number: uthmaniEd.number,
+                        name: uthmaniEd.name,
+                        englishName: uthmaniEd.englishName,
+                        revelationType: uthmaniEd.revelationType === 'Meccan' ? 'Makkiyah' : 'Madaniyah',
+                        numberOfAyahs: uthmaniEd.numberOfAyahs,
+                        ayahs: mergedAyahs
+                    };
+
+                    updateSurahHeaderUI(state.currentSurahData);
+                    renderAyahs(state.currentSurahData);
+
+                    if (targetAyah) {
+                        setTimeout(() => scrollToActiveAyah(surahNumber, targetAyah), 180);
+                    } else {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                }
+            } catch (err) {
+                console.error('Error loadSurah:', err);
+                container.innerHTML = `
+                    <div class="p-6 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 text-center">
+                        <p class="text-sm font-bold text-rose-700 dark:text-rose-300">Gagal memuat surah. Periksa koneksi internet Anda.</p>
+                        <button onclick="loadSurah(${surahNumber})" class="mt-3 px-4 py-2 rounded-xl bg-emerald-850 text-white text-xs font-bold">Muat Ulang</button>
+                    </div>`;
+            }
+        }
+
+        function stripLeadingBasmalahPlain(text) {
+            const basmalahVariants = [
+                'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ ',
+                'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
+                'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ ',
+                'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'
+            ];
+            for (const b of basmalahVariants) {
+                if (text.startsWith(b)) return text.slice(b.length).trim();
+            }
+            return text;
+        }
+
+        function stripLeadingBasmalahTajweed(raw) {
+            // Hapus 4 kata pertama basmalah ber-tag jika diawali بسم
+            const plainCheck = raw.replace(/\[[^\]]+\[/g, '').replace(/\]/g, '');
+            if (plainCheck.startsWith('بِسْمِ')) {
+                const parts = raw.split(' ');
+                if (parts.length > 4) {
+                    return parts.slice(4).join(' ').trim();
+                }
+            }
+            return raw;
+        }
+
+        function updateSurahHeaderUI(surah) {
+            document.getElementById('surah-number-badge').textContent = `Surah ${surah.number}`;
+            document.getElementById('surah-revelation-badge').textContent = surah.revelationType;
+            document.getElementById('surah-ayah-count-badge').textContent = `${surah.numberOfAyahs} Ayat`;
+            document.getElementById('surah-title-latin').textContent = surah.englishName;
+            document.getElementById('surah-title-arabic').textContent = surah.name;
+            document.getElementById('surah-meaning').textContent = SURAH_INDONESIAN_MEANINGS[surah.number] || '';
+
+            document.getElementById('btn-prev-surah').disabled = surah.number <= 1;
+            document.getElementById('btn-next-surah').disabled = surah.number >= 114;
+
+            const bismillahBox = document.getElementById('bismillah-header');
+            bismillahBox.classList.toggle('hidden', surah.number === 1 || surah.number === 9);
+            document.getElementById('ayah-filter-input').value = '';
+        }
+
+        function navigateSurah(delta) {
+            const next = state.currentSurahNumber + delta;
+            if (next >= 1 && next <= 114) {
+                loadSurah(next);
+            }
+        }
+
+        function renderAyahs(surah) {
+            const container = document.getElementById('ayahs-container');
+            const tajwidClass = state.settings.tajwid ? 'tajwid-active' : '';
+            const blurClass = state.settings.tahfidzMode ? 'tahfidz-blur' : '';
+
+            container.innerHTML = surah.ayahs.map(ayah => {
+                const key = `${surah.number}:${ayah.numberInSurah}`;
+                const isMem = !!state.memorizedAyahs[key];
+                const isPlayingThis = state.audio.isPlaying &&
+                    state.audio.currentSurah === surah.number &&
+                    state.audio.currentAyah === ayah.numberInSurah;
+                const arabicNum = toArabicDigits(ayah.numberInSurah);
+
+                return `
+                    <article id="ayah-card-${surah.number}-${ayah.numberInSurah}" data-ayah="${ayah.numberInSurah}" data-trans="${escapeHtmlAttr(ayah.translation.toLowerCase())}" class="ayah-card-item rounded-3xl bg-white dark:bg-emerald-925 border ${isPlayingThis ? 'ayah-playing' : 'border-slate-200 dark:border-emerald-800/70'} p-4 sm:p-6 shadow-xs transition-all duration-300">
+                        <!-- Top Ayah Action Bar -->
+                        <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-100 dark:border-emerald-800/50">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2.5 py-1 rounded-xl bg-emerald-900/10 dark:bg-gold-500/15 text-emerald-900 dark:text-gold-300 font-bold text-xs">
+                                    ${surah.number}:${ayah.numberInSurah}
+                                </span>
+                                <span class="text-[11px] text-slate-400">Juz ${ayah.juz} • Hal ${ayah.page}</span>
+                            </div>
+
+                            <div class="flex items-center gap-1 sm:gap-1.5">
+                                <!-- Play Single Ayah -->
+                                <button onclick="playAyah(${surah.number}, ${ayah.numberInSurah}, 'single')" class="px-2.5 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-900/70 hover:bg-gold-500 hover:text-emerald-950 text-emerald-800 dark:text-gold-300 text-xs font-semibold flex items-center gap-1 transition" title="Putar Ayat Ini">
+                                    <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+                                    <span class="hidden sm:inline">Putar</span>
+                                </button>
+
+                                <!-- Tafsir & Asbabun Nuzul Modal -->
+                                <button onclick="openTafsirModal(${surah.number}, ${ayah.numberInSurah})" class="px-2.5 py-1.5 rounded-xl bg-amber-50 dark:bg-gold-500/15 hover:bg-gold-500 hover:text-emerald-950 text-amber-800 dark:text-gold-300 text-xs font-semibold flex items-center gap-1 transition" title="Tafsir Ibnu Katsir, At-Thabari & Asbabun Nuzul">
+                                    <i data-lucide="book-open-text" class="w-3.5 h-3.5"></i>
+                                    <span>Tafsir &amp; Asbab</span>
+                                </button>
+
+                                <!-- Mark Memorized -->
+                                <button onclick="toggleMemorizedAyah(${surah.number}, ${ayah.numberInSurah})" class="p-1.5 rounded-xl border transition ${isMem ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-emerald-800 text-slate-400 hover:text-emerald-600'}" title="${isMem ? 'Sudah Dihafal' : 'Tandai Hafal'}">
+                                    <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                                </button>
+
+                                <!-- Bookmark Last Read -->
+                                <button onclick="setLastRead(${surah.number}, ${ayah.numberInSurah}, ${ayah.page})" class="p-1.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-emerald-800 text-slate-400 hover:text-gold-500 transition" title="Tandai Terakhir Dibaca">
+                                    <i data-lucide="bookmark" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Arabic Utsmani Text -->
+                        <div onclick="this.classList.toggle('revealed')" class="arabic-text text-right text-slate-900 dark:text-white ${tajwidClass} ${blurClass} py-1">
+                            ${state.settings.tajwid ? ayah.tajweedHtml : escapeHtml(ayah.plainText)}
+                            <span class="ayah-badge">${arabicNum}</span>
+                        </div>
+
+                        <!-- Latin Transliteration -->
+                        ${state.settings.showLatin ? `
+                            <p onclick="this.classList.toggle('revealed')" class="mt-3 text-xs sm:text-sm text-emerald-700 dark:text-gold-300/90 font-medium leading-relaxed ${blurClass}">
+                                ${escapeHtml(ayah.latin)}
+                            </p>
+                        ` : ''}
+
+                        <!-- Indonesian Translation -->
+                        ${state.settings.showTranslation ? `
+                            <p class="mt-2.5 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                <span class="font-bold text-slate-400 mr-1">${ayah.numberInSurah}.</span>${escapeHtml(ayah.translation)}
+                            </p>
+                        ` : ''}
+                    </article>
+                `;
+            }).join('');
+
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function filterAyahsInView(e) {
+            const q = e.target.value.trim().toLowerCase();
+            const cards = document.querySelectorAll('.ayah-card-item');
+            cards.forEach(card => {
+                const ayahNum = card.getAttribute('data-ayah');
+                const trans = card.getAttribute('data-trans') || '';
+                const match = !q || ayahNum === q || trans.includes(q);
+                card.classList.toggle('hidden', !match);
+            });
+        }
+
+        // =========================================================
+        // 6. MUSHAF 604 HALAMAN (UTUH TANPA LATIN, TERJEMAH, TAFSIR)
+        // =========================================================
+        async function loadMushafPage(pageNum) {
+            const page = Math.min(604, Math.max(1, parseInt(pageNum, 10) || 1));
+            state.currentPageNumber = page;
+            document.getElementById('mushaf-page-input').value = page;
+
+            const contentEl = document.getElementById('mushaf-page-content');
+            contentEl.innerHTML = `
+                <div class="py-16 text-center">
+                    <div class="w-9 h-9 border-4 border-gold-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Membuka Lembaran Mushaf Halaman ${page}...</p>
+                </div>`;
+
+            try {
+                const url = `https://api.alquran.cloud/v1/page/${page}/quran-tajweed`;
+                const res = await fetch(url);
+                const json = await res.json();
+
+                if (json.code === 200 && json.data && json.data.ayahs) {
+                    state.currentPageData = json.data;
+                    renderMushafPage(json.data);
+                }
+            } catch (err) {
+                console.error('Gagal memuat halaman mushaf:', err);
+                contentEl.innerHTML = `<p class="text-center text-sm text-rose-600 py-10">Gagal memuat halaman ${page}. Periksa koneksi internet Anda.</p>`;
+            }
+        }
+
+        function renderMushafPage(pageData) {
+            const ayahs = pageData.ayahs || [];
+            if (!ayahs.length) return;
+
+            const firstAyah = ayahs[0];
+            const lastAyah = ayahs[ayahs.length - 1];
+            const hizbNum = Math.ceil((firstAyah.hizbQuarter || 1) / 4);
+
+            document.getElementById('mushaf-header-juz').textContent = `Juz ${firstAyah.juz} • Hizb ${hizbNum}`;
+
+            // Kumpulkan nama surah pada halaman ini
+            const uniqueSurahNames = [...new Set(ayahs.map(a => a.surah.name))];
+            document.getElementById('mushaf-header-surah').textContent = uniqueSurahNames.join(' • ');
+
+            document.getElementById('mushaf-footer-page-num').textContent = toArabicDigits(state.currentPageNumber);
+            document.getElementById('mushaf-footer-latin-num').textContent = `Halaman ${state.currentPageNumber} / 604`;
+
+            document.getElementById('btn-mushaf-prev').disabled = state.currentPageNumber <= 1;
+            document.getElementById('btn-mushaf-next').disabled = state.currentPageNumber >= 604;
+
+            const tajwidClass = state.settings.tajwid ? 'tajwid-active' : '';
+            const blurClass = state.settings.tahfidzMode ? 'tahfidz-blur' : '';
+
+            let html = `<div class="mushaf-page-text text-slate-900 dark:text-white ${tajwidClass}">`;
+
+            ayahs.forEach((a, idx) => {
+                const sNum = a.surah.number;
+                const aNum = a.numberInSurah;
+
+                // Tampilkan banner surah baru jika ayat 1 muncul di halaman ini
+                if (aNum === 1) {
+                    html += `
+                        <div class="my-4 py-2 px-4 rounded-2xl bg-gradient-to-r from-emerald-950 via-emerald-850 to-emerald-950 border border-gold-400/60 text-center shadow-sm not-italic" style="direction: rtl;">
+                            <span class="font-arabic text-xl sm:text-2xl text-gold-300 font-bold">${a.surah.name}</span>
+                        </div>
+                    `;
+                    if (sNum !== 1 && sNum !== 9) {
+                        html += `
+                            <div class="text-center mb-3 font-arabic text-xl sm:text-2xl text-emerald-900 dark:text-gold-300">
+                                بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+                            </div>
+                        `;
+                    }
+                }
+
+                let rawText = a.text;
+                if (sNum !== 1 && sNum !== 9 && aNum === 1) {
+                    rawText = stripLeadingBasmalahTajweed(rawText);
+                }
+
+                const renderedArabic = state.settings.tajwid
+                    ? parseTajweedMarkup(rawText)
+                    : escapeHtml(stripTajweedTagsToPlain(rawText));
+
+                const isPlayingThis = state.audio.isPlaying &&
+                    state.audio.currentSurah === sNum &&
+                    state.audio.currentAyah === aNum;
+
+                html += `
+                    <span id="mushaf-ayah-${sNum}-${aNum}"
+                          onclick="handleMushafAyahClick(this, ${sNum}, ${aNum})"
+                          class="mushaf-inline-ayah ${blurClass} ${isPlayingThis ? 'mushaf-ayah-playing' : ''}"
+                          title="Klik untuk memutar QS. ${a.surah.englishName} : ${aNum}">
+                        ${renderedArabic}<span class="ayah-badge">${toArabicDigits(aNum)}</span>
+                    </span>
+                `;
+            });
+
+            html += `</div>`;
+            document.getElementById('mushaf-page-content').innerHTML = html;
+        }
+
+        function handleMushafAyahClick(el, surahNum, ayahNum) {
+            if (state.settings.tahfidzMode && !el.classList.contains('revealed')) {
+                el.classList.add('revealed');
+                return;
+            }
+            playAyah(surahNum, ayahNum, 'page');
+        }
+
+        function toggleMushafBlurAll() {
+            state.settings.tahfidzMode = !state.settings.tahfidzMode;
+            saveSettings();
+            applySettingsUI();
+            if (state.currentPageData) renderMushafPage(state.currentPageData);
+        }
+
+        function navigateMushafPage(delta) {
+            const target = state.currentPageNumber + delta;
+            if (target >= 1 && target <= 604) {
+                loadMushafPage(target);
+            }
+        }
+
+        function jumpToMushafPage(val) {
+            loadMushafPage(val);
+        }
+
+        function initMushafTouchSwipe() {
+            const sheet = document.getElementById('mushaf-sheet');
+            if (!sheet) return;
+            let startX = 0;
+            sheet.addEventListener('touchstart', (e) => {
+                startX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            sheet.addEventListener('touchend', (e) => {
+                const diffX = e.changedTouches[0].screenX - startX;
+                if (Math.abs(diffX) > 65) {
+                    // Mushaf Arab: swipe kanan = halaman berikutnya (+1), swipe kiri = sebelumnya (-1)
+                    if (diffX > 0) navigateMushafPage(1);
+                    else navigateMushafPage(-1);
+                }
+            }, { passive: true });
+        }
+
+        // =========================================================
+        // 7. TAJWID PARSER (CHARACTER-STACK BEBAS BOCOR TAG)
+        // =========================================================
+        const TAJWID_CLASS_MAP = {
+            'g': 'tj-ghunnah',
+            'n': 'tj-idgham-bighunnah',
+            'u': 'tj-idgham-bilaghunnah',
+            'f': 'tj-ikhfa',
+            'c': 'tj-ikhfa',
+            'w': 'tj-ikhfa',
+            'i': 'tj-iqlab',
+            'q': 'tj-qalqalah',
+            'o': 'tj-mad-wajib',
+            'p': 'tj-mad-jaiz',
+            'm': 'tj-mad-thabii',
+            'a': 'tj-mad-thabii',
+            'h': 'tj-hamzah-wasl',
+            'l': 'tj-hamzah-wasl',
+            's': 'tj-hamzah-wasl'
+        };
+
+        function parseTajweedMarkup(raw) {
+            if (!raw) return '';
+            let out = '';
+            let i = 0;
+            const len = raw.length;
+            const stack = [];
+
+            while (i < len) {
+                if (raw[i] === '[') {
+                    const code = raw[i + 1];
+                    const secondBracket = raw.indexOf('[', i + 2);
+                    if (code && secondBracket !== -1 && secondBracket - i <= 8) {
+                        const cls = TAJWID_CLASS_MAP[code] || '';
+                        out += cls ? `<span class="${cls}">` : '<span>';
+                        stack.push(true);
+                        i = secondBracket + 1;
+                        continue;
+                    }
+                }
+                if (raw[i] === ']' && stack.length > 0) {
+                    out += '</span>';
+                    stack.pop();
+                    i++;
+                    continue;
+                }
+                out += escapeHtml(raw[i]);
+                i++;
+            }
+
+            while (stack.length > 0) {
+                out += '</span>';
+                stack.pop();
+            }
+            return out;
+        }
+
+        function stripTajweedTagsToPlain(raw) {
+            return raw.replace(/\[[a-zA-Z0-9:]+\[/g, '').replace(/\]/g, '');
+        }
+
+        function showTajwidDetail(title, desc) {
+            document.getElementById('tajwid-rule-detail').innerHTML = `<strong class="text-emerald-800 dark:text-gold-300">${title}:</strong> ${desc}`;
+        }
+
+        // =========================================================
+        // 8. MUROTTAL AUDIO ENGINE (10 QARI + AUTO-SCROLL KE ATAS)
+        // =========================================================
+        function populateQariSelectors() {
+            const selectEl = document.getElementById('quick-qari-select');
+            const modalList = document.getElementById('qari-modal-list');
+
+            selectEl.innerHTML = QARIS.map(q =>
+                `<option value="${q.id}" ${q.id === state.audio.qariId ? 'selected' : ''}>${q.name.replace('Syekh ', '')}</option>`
+            ).join('');
+
+            modalList.innerHTML = QARIS.map(q => {
+                const isSelected = q.id === state.audio.qariId;
+                return `
+                    <button onclick="selectQari('${q.id}', true)" class="text-left p-3.5 rounded-2xl border transition flex items-start justify-between gap-2 ${isSelected ? 'bg-emerald-850 text-white border-gold-400 shadow-md' : 'bg-slate-50 dark:bg-emerald-950 border-slate-200 dark:border-emerald-800 hover:border-gold-400'}">
+                        <div class="min-w-0">
+                            <p class="text-xs sm:text-sm font-bold truncate ${isSelected ? 'text-gold-300' : 'text-slate-800 dark:text-white'}">${q.name}</p>
+                            <p class="font-arabic text-base ${isSelected ? 'text-white' : 'text-emerald-800 dark:text-gold-400'}">${q.arabic}</p>
+                            <p class="text-[11px] mt-1 ${isSelected ? 'text-emerald-100' : 'text-slate-500 dark:text-slate-400'}">${q.country}</p>
+                            <p class="text-[10px] mt-0.5 ${isSelected ? 'text-gold-200' : 'text-emerald-700 dark:text-emerald-300'}">${q.style}</p>
+                        </div>
+                        ${isSelected ? '<i data-lucide="check-circle-2" class="w-5 h-5 text-gold-400 shrink-0"></i>' : ''}
+                    </button>
+                `;
+            }).join('');
+
+            updatePlayerTrackInfo();
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function openQariModal() {
+            populateQariSelectors();
+            const modal = document.getElementById('qari-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function selectQari(qariId, closeAfter = false) {
+            state.audio.qariId = qariId;
+            localStorage.setItem('quran_qari_v3', qariId);
+            populateQariSelectors();
+
+            if (state.audio.isPlaying) {
+                playAyah(state.audio.currentSurah, state.audio.currentAyah, state.audio.playMode);
+            }
+            if (closeAfter) {
+                closeModal('qari-modal');
+            }
+        }
+
+        function getActiveQari() {
+            return QARIS.find(q => q.id === state.audio.qariId) || QARIS[0];
+        }
+
+        function playFullSurah() {
+            if (!state.currentSurahData) return;
+            playAyah(state.currentSurahData.number, 1, 'surah');
+        }
+
+        function playMushafPageAudio() {
+            if (!state.currentPageData || !state.currentPageData.ayahs.length) return;
+            const first = state.currentPageData.ayahs[0];
+            playAyah(first.surah.number, first.numberInSurah, 'page');
+        }
+
+        async function playAyah(surahNum, ayahNum, mode = 'surah') {
+            const audioEl = document.getElementById('quran-audio');
+            const qari = getActiveQari();
+            const token = ++state.audio.requestToken;
+
+            const surahMeta = state.surahs.find(s => s.number === surahNum);
+            state.audio.currentSurah = surahNum;
+            state.audio.currentAyah = ayahNum;
+            state.audio.totalAyahsInSurah = surahMeta ? surahMeta.numberOfAyahs : 7;
+            state.audio.playMode = mode;
+
+            highlightActiveAyah();
+            // Gulir otomatis penanda teks ke bagian atas layar tepat di bawah header
+            scrollToActiveAyah(surahNum, ayahNum);
+            updatePlayerTrackInfo();
+
+            const sPad = String(surahNum).padStart(3, '0');
+            const aPad = String(ayahNum).padStart(3, '0');
+            const primaryUrl = `https://everyayah.com/data/${qari.everyAyahFolder}/${sPad}${aPad}.mp3`;
+
+            audioEl.playbackRate = state.audio.speed;
+            audioEl.src = primaryUrl;
+
+            try {
+                await audioEl.play();
+            } catch (err) {
+                if (token !== state.audio.requestToken) return;
+                if (err.name === 'AbortError') return;
+
+                // Fallback ke Islamic Network CDN jika server EveryAyah gagal
+                try {
+                    const globalAyahNum = computeGlobalAyahNumber(surahNum, ayahNum);
+                    audioEl.src = `https://cdn.islamic.network/quran/audio/128/${qari.cdnSlug}/${globalAyahNum}.mp3`;
+                    await audioEl.play();
+                } catch (fallbackErr) {
+                    console.warn('Playback gagal:', fallbackErr);
+                }
+            }
+        }
+
+        function computeGlobalAyahNumber(surahNum, ayahNum) {
+            let total = 0;
+            for (const s of state.surahs) {
+                if (s.number < surahNum) total += s.numberOfAyahs;
+                else break;
+            }
+            return total + ayahNum;
+        }
+
+        function togglePlayPause() {
+            const audioEl = document.getElementById('quran-audio');
+            if (!audioEl.src) {
+                if (state.viewMode === 'mushaf') playMushafPageAudio();
+                else playFullSurah();
+                return;
+            }
+            if (audioEl.paused) {
+                audioEl.play().catch(() => {});
+            } else {
+                audioEl.pause();
+            }
+        }
+
+        function handleAudioEnded() {
+            const rep = state.audio.repeatMode;
+
+            if (rep === 'infinite') {
+                playAyah(state.audio.currentSurah, state.audio.currentAyah, state.audio.playMode);
+                return;
+            }
+
+            const targetRepeats = rep === 'repeat1' ? 1 : rep === 'repeat3' ? 3 : rep === 'repeat5' ? 5 : 0;
+            if (targetRepeats > 0 && state.audio.repeatCounter < targetRepeats) {
+                state.audio.repeatCounter++;
+                playAyah(state.audio.currentSurah, state.audio.currentAyah, state.audio.playMode);
+                return;
+            }
+
+            state.audio.repeatCounter = 0;
+
+            if (state.audio.playMode === 'single') {
+                state.audio.isPlaying = false;
+                updatePlayerIcons();
+                return;
+            }
+
+            playNextAyah();
+        }
+
+        async function playNextAyah() {
+            const { currentSurah, currentAyah, totalAyahsInSurah, playMode } = state.audio;
+
+            if (currentAyah < totalAyahsInSurah) {
+                const nextAyah = currentAyah + 1;
+                // Jika dalam mode Mushaf dan ayat berikutnya pindah halaman, muat halaman baru otomatis
+                if (playMode === 'page' && state.currentPageData) {
+                    const stillOnPage = state.currentPageData.ayahs.some(
+                        a => a.surah.number === currentSurah && a.numberInSurah === nextAyah
+                    );
+                    if (!stillOnPage && state.currentPageNumber < 604) {
+                        await loadMushafPage(state.currentPageNumber + 1);
+                    }
+                }
+                playAyah(currentSurah, nextAyah, playMode);
+            } else if (currentSurah < 114) {
+                const nextSurah = currentSurah + 1;
+                if (playMode === 'surah') {
+                    await loadSurah(nextSurah);
+                } else if (playMode === 'page' && state.currentPageNumber < 604) {
+                    const stillOnPage = state.currentPageData && state.currentPageData.ayahs.some(
+                        a => a.surah.number === nextSurah && a.numberInSurah === 1
+                    );
+                    if (!stillOnPage) {
+                        await loadMushafPage(state.currentPageNumber + 1);
+                    }
+                }
+                playAyah(nextSurah, 1, playMode);
+            } else {
+                state.audio.isPlaying = false;
+                updatePlayerIcons();
+            }
+        }
+
+        function playPrevAyah() {
+            const { currentSurah, currentAyah, playMode } = state.audio;
+            if (currentAyah > 1) {
+                playAyah(currentSurah, currentAyah - 1, playMode);
+            } else if (currentSurah > 1) {
+                const prevSurah = state.surahs.find(s => s.number === currentSurah - 1);
+                const lastAyah = prevSurah ? prevSurah.numberOfAyahs : 1;
+                playAyah(currentSurah - 1, lastAyah, playMode);
+            }
+        }
+
+        function cycleRepeatMode() {
+            const order = ['next', 'repeat1', 'repeat3', 'repeat5', 'infinite'];
+            const labels = {
+                next: 'Lanjut',
+                repeat1: 'Ulang 1x',
+                repeat3: 'Ulang 3x',
+                repeat5: 'Ulang 5x',
+                infinite: 'Ulang ∞'
+            };
+            const idx = (order.indexOf(state.audio.repeatMode) + 1) % order.length;
+            state.audio.repeatMode = order[idx];
+            state.audio.repeatCounter = 0;
+            document.getElementById('repeat-mode-label').textContent = labels[state.audio.repeatMode];
+        }
+
+        function cyclePlaybackSpeed() {
+            const speeds = [0.75, 1.0, 1.25, 1.5];
+            const idx = (speeds.indexOf(state.audio.speed) + 1) % speeds.length;
+            state.audio.speed = speeds[idx];
+            document.getElementById('quran-audio').playbackRate = state.audio.speed;
+            document.getElementById('btn-playback-speed').textContent = `${state.audio.speed}x`;
+        }
+
+        function updateAudioProgress() {
+            const audioEl = document.getElementById('quran-audio');
+            if (!audioEl.duration) return;
+            const pct = (audioEl.currentTime / audioEl.duration) * 100;
+            document.getElementById('audio-progress-bar').style.width = `${pct}%`;
+        }
+
+        function seekAudio(e) {
+            const audioEl = document.getElementById('quran-audio');
+            if (!audioEl.duration) return;
+            const rect = e.currentTarget.getBoundingClientRect();
+            const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            audioEl.currentTime = ratio * audioEl.duration;
+        }
+
+        function updatePlayerTrackInfo() {
+            const qari = getActiveQari();
+            const surahMeta = state.surahs.find(s => s.number === state.audio.currentSurah);
+            const sName = surahMeta ? surahMeta.englishName : `Surah ${state.audio.currentSurah}`;
+            document.getElementById('player-track-title').textContent = `QS. ${sName} (${state.audio.currentSurah}:${state.audio.currentAyah})`;
+            document.getElementById('player-qari-subtitle').textContent = qari.name;
+        }
+
+        function updatePlayerIcons() {
+            const icon = document.getElementById('play-pause-icon');
+            if (icon) {
+                icon.setAttribute('data-lucide', state.audio.isPlaying ? 'pause' : 'play');
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+
+        function highlightActiveAyah() {
+            document.querySelectorAll('.ayah-playing').forEach(el => el.classList.remove('ayah-playing'));
+            document.querySelectorAll('.mushaf-ayah-playing').forEach(el => el.classList.remove('mushaf-ayah-playing'));
+
+            const { currentSurah, currentAyah } = state.audio;
+            const cardEl = document.getElementById(`ayah-card-${currentSurah}-${currentAyah}`);
+            if (cardEl) cardEl.classList.add('ayah-playing');
+
+            const mushafEl = document.getElementById(`mushaf-ayah-${currentSurah}-${currentAyah}`);
+            if (mushafEl) mushafEl.classList.add('mushaf-ayah-playing');
+        }
+
+        // =========================================================
+        // AUTOMATIC SCROLL KE ATAS MENGIKUTI PENANDA TEKS AKTIF
+        // =========================================================
+        function scrollToActiveAyah(surahNum, ayahNum) {
+            const targetId = state.viewMode === 'mushaf'
+                ? `mushaf-ayah-${surahNum}-${ayahNum}`
+                : `ayah-card-${surahNum}-${ayahNum}`;
+
+            const el = document.getElementById(targetId);
+            if (!el) return;
+
+            const headerEl = document.querySelector('header');
+            const headerHeight = headerEl ? headerEl.offsetHeight : 64;
+            const topGap = 16; // Jarak aman tepat di bawah header atas
+
+            const elementRect = el.getBoundingClientRect();
+            const targetScrollY = window.scrollY + elementRect.top - headerHeight - topGap;
+
+            window.scrollTo({
+                top: Math.max(0, targetScrollY),
+                behavior: 'smooth'
+            });
+        }
+
+        // =========================================================
+        // 9. TAFSIR MULTI-KITAB & ASBABUN NUZUL (BAHASA INDONESIA)
+        // =========================================================
+        function openTafsirModal(surahNum, ayahNum) {
+            state.activeTafsirContext = { surah: surahNum, ayah: ayahNum, tab: 'ibnukatsir' };
+
+            const surahMeta = state.surahs.find(s => s.number === surahNum);
+            const sName = surahMeta ? surahMeta.englishName : `Surah ${surahNum}`;
+            document.getElementById('tafsir-modal-title').textContent = `QS. ${sName} (${surahNum}) : Ayat ${ayahNum}`;
+
+            const ayahObj = state.currentSurahData && state.currentSurahData.ayahs
+                ? state.currentSurahData.ayahs.find(a => a.numberInSurah === ayahNum)
+                : null;
+
+            document.getElementById('tafsir-ayah-arabic').textContent = ayahObj ? ayahObj.plainText : '';
+            document.getElementById('tafsir-ayah-translation').textContent = ayahObj ? `"${ayahObj.translation}"` : '';
+
+            const modal = document.getElementById('tafsir-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            switchTafsirTab('ibnukatsir');
+        }
+
+        async function switchTafsirTab(tab) {
+            state.activeTafsirContext.tab = tab;
+            const tabs = ['ibnukatsir', 'thabari', 'asbab', 'kemenag'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tafsir-tab-${t}`);
+                btn.className = t === tab
+                    ? 'shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-850 text-white dark:bg-gold-500 dark:text-emerald-950 transition'
+                    : 'shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-white/10 transition';
+            });
+
+            const { surah, ayah } = state.activeTafsirContext;
+            const bodyEl = document.getElementById('tafsir-modal-body');
+            bodyEl.innerHTML = `<div class="py-8 text-center text-xs text-slate-400">Memuat kajian tafsir berbahasa Indonesia...</div>`;
+
+            const key = `${surah}:${ayah}`;
+            const curated = CURATED_TAFSIR_ID[key];
+            const surahMeta = state.surahs.find(s => s.number === surah);
+            const sName = surahMeta ? surahMeta.englishName : `Surah ${surah}`;
+            const sMeaning = SURAH_INDONESIAN_MEANINGS[surah] || '';
+            const ayahObj = state.currentSurahData && state.currentSurahData.ayahs
+                ? state.currentSurahData.ayahs.find(a => a.numberInSurah === ayah)
+                : null;
+            const transText = ayahObj ? ayahObj.translation : '';
+
+            // Ambil Tafsir Kemenag RI dari equran.id sebagai rujukan tafsir berbahasa Indonesia
+            let kemenagText = '';
+            try {
+                const res = await fetch(`https://equran.id/api/v2/tafsir/${surah}`);
+                const json = await res.json();
+                if (json && json.data && json.data.tafsir) {
+                    const found = json.data.tafsir.find(item => item.ayat === ayah);
+                    if (found) kemenagText = found.teks;
+                }
+            } catch (e) {
+                console.warn('Fallback tafsir lokal digunakan.');
+            }
+
+            if (tab === 'ibnukatsir') {
+                if (curated && curated.ibnukatsir) {
+                    bodyEl.innerHTML = `<div class="space-y-3">${curated.ibnukatsir}</div>`;
+                } else {
+                    bodyEl.innerHTML = `
+                        <div class="p-3.5 rounded-2xl bg-amber-50/70 dark:bg-gold-500/10 border border-amber-200/80 dark:border-gold-500/30 text-xs">
+                            <strong>Manhaj Tafsir Al-Hafizh Ibnu Katsir (Tafsir al-Qur'an al-'Azhim):</strong> Menafsirkan Al-Qur'an dengan Al-Qur'an, dengan Hadits Nabi ﷺ, perkataan para Sahabat, serta pendapat Tabi'in yang muktabar.
+                        </div>
+                        <p><strong>Syarah QS. ${sName} (${sMeaning}) Ayat ${ayah}:</strong></p>
+                        <p>Dalam firman Allah Ta'ala yang artinya: <em>"${escapeHtml(transText)}"</em>, Al-Hafizh Ibnu Katsir menjelaskan kandungan makna ayat ini selaras dengan konteks keseluruhan Surah ${sName} yang diturunkan di ${surahMeta && surahMeta.revelationType === 'Meccan' ? 'Makkah (mengokohkan akidah, tauhid, dan hari akhir)' : 'Madinah (membangun syariat, adab bermasyarakat, dan ketaatan hukum Allah)'}.</p>
+                        ${kemenagText ? `<div class="pt-2 border-t border-slate-200 dark:border-emerald-800/70"><p class="text-xs font-bold text-emerald-800 dark:text-gold-300 mb-1">Uraian Pendalaman Makna Ayat:</p><p>${sanitizeTafsirHtml(kemenagText)}</p></div>` : ''}
+                    `;
+                }
+            } else if (tab === 'thabari') {
+                if (curated && curated.thabari) {
+                    bodyEl.innerHTML = `<div class="space-y-3">${curated.thabari}</div>`;
+                } else {
+                    bodyEl.innerHTML = `
+                        <div class="p-3.5 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 text-xs">
+                            <strong>Manhaj Imam Abu Ja'far Ath-Thabari (Jami' al-Bayan 'an Ta'wil Ayi al-Qur'an):</strong> Kitab induk tafsir bil-ma'tsur yang menghimpun riwayat sanad dari Ibnu Abbas, Mujahid, Qatadah, As-Suddi, serta analisis tata bahasa Arab klasik (<em>Lisan al-'Arab</em>).
+                        </div>
+                        <p><strong>Takwil Ayat pada QS. ${sName} Ayat ${ayah}:</strong></p>
+                        <p>Imam Ath-Thabari menafsirkan makna ayat ini—<em>"${escapeHtml(transText)}"</em>—dengan merujuk pada ragam qira'at dan penggunaan kata dalam bahasa Arab fasih di kalangan kabilah Quraisy saat wahyu diturunkan, sehingga setiap lafaz memiliki ketepatan hukum dan pesan petunjuk bagi orang-orang beriman.</p>
+                        ${kemenagText ? `<div class="pt-2 border-t border-slate-200 dark:border-emerald-800/70"><p class="text-xs font-bold text-emerald-800 dark:text-gold-300 mb-1">Penjelasan Konteks &amp; Kandungannya:</p><p>${sanitizeTafsirHtml(kemenagText)}</p></div>` : ''}
+                    `;
+                }
+            } else if (tab === 'asbab') {
+                if (curated && curated.asbab) {
+                    bodyEl.innerHTML = `<div class="space-y-3">${curated.asbab}</div>`;
+                } else {
+                    const phaseDesc = surahMeta && surahMeta.revelationType === 'Meccan'
+                        ? `Surah ${sName} termasuk golongan surah <strong>Makkiyah</strong> yang diturunkan sebelum hijrahnya Rasulullah ﷺ ke Madinah. Ayat-ayatnya diturunkan untuk meneguhkan hati Rasulullah ﷺ dan para sahabat dalam menghadapi penentangan kaum musyrikin Quraisy serta menanamkan tauhid yang murni.`
+                        : `Surah ${sName} termasuk golongan surah <strong>Madaniyah</strong> yang diturunkan setelah hijrahnya Rasulullah ﷺ ke Madinah. Ayat-ayatnya turun untuk menjawab persoalan nyata yang dihadapi umat Islam dalam ibadah, muamalah, dan pembinaan masyarakat madani.`;
+                    bodyEl.innerHTML = `
+                        <div class="p-3.5 rounded-2xl bg-sky-50/80 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 text-xs">
+                            <strong>Kajian Asbabun Nuzul (Kitab Lubabun Nuqul - Imam As-Suyuthi &amp; Al-Wahidi):</strong>
+                        </div>
+                        <p><strong>Konteks Turunnya QS. ${sName} Ayat ${ayah}:</strong></p>
+                        <p>${phaseDesc}</p>
+                        <p>Sebagaimana kaidah para ulama ushul tafsir: <em>"Al-'Ibrah bi 'umum al-lafzhi la bi khusus as-sabab"</em> (pelajaran diambil dari keumuman lafaz ayat, bukan semata-mata kekhususan sebab turunnya), maka pesan pada ayat ini—<em>"${escapeHtml(transText)}"</em>—berlaku umum sebagai pedoman hidup seluruh umat Islam sepanjang zaman.</p>
+                    `;
+                }
+            } else if (tab === 'kemenag') {
+                bodyEl.innerHTML = kemenagText
+                    ? `<div class="space-y-3"><p class="text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-gold-300">Tafsir Tahlili Kementerian Agama Republik Indonesia</p><p>${sanitizeTafsirHtml(kemenagText)}</p></div>`
+                    : `<p>Terjemah &amp; Tafsir Ringkas QS. ${sName} Ayat ${ayah}: <em>"${escapeHtml(transText)}"</em>.</p>`;
+            }
+        }
+
+        function openSurahInfoModal() {
+            if (!state.currentSurahData) return;
+            const s = state.currentSurahData;
+            const meaning = SURAH_INDONESIAN_MEANINGS[s.number] || '';
+            document.getElementById('surah-info-modal-title').textContent = `Mukadimah Surah ${s.englishName} (${meaning})`;
+            document.getElementById('surah-info-modal-body').innerHTML = `
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="p-3 rounded-2xl bg-slate-100 dark:bg-emerald-950">
+                        <p class="text-[10px] text-slate-400">Nomor Surah</p>
+                        <p class="text-sm font-bold text-emerald-900 dark:text-gold-300">Ke-${s.number}</p>
+                    </div>
+                    <div class="p-3 rounded-2xl bg-slate-100 dark:bg-emerald-950">
+                        <p class="text-[10px] text-slate-400">Golongan</p>
+                        <p class="text-sm font-bold text-emerald-900 dark:text-gold-300">${s.revelationType}</p>
+                    </div>
+                    <div class="p-3 rounded-2xl bg-slate-100 dark:bg-emerald-950">
+                        <p class="text-[10px] text-slate-400">Jumlah Ayat</p>
+                        <p class="text-sm font-bold text-emerald-900 dark:text-gold-300">${s.numberOfAyahs} Ayat</p>
+                    </div>
+                </div>
+                <p><strong>Surah ${s.englishName}</strong> (${s.name}) memiliki arti <em>"${meaning}"</em>. Surah ini terdiri atas <strong>${s.numberOfAyahs} ayat</strong> dan termasuk dalam golongan surah <strong>${s.revelationType}</strong>.</p>
+                <p>Anda dapat membaca surah ini baik dalam tampilan kajian ayat per ayat lengkap dengan Tajwid warna dan Tafsir berbahasa Indonesia, maupun dalam tampilan lembaran utuh <strong>Mushaf 604 Halaman</strong>.</p>
+            `;
+            const modal = document.getElementById('surah-info-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // =========================================================
+        // 10. TAHFIDZ TRACKER & BOOKMARK LAST READ
+        // =========================================================
+        function toggleMemorizedAyah(surahNum, ayahNum) {
+            const key = `${surahNum}:${ayahNum}`;
+            if (state.memorizedAyahs[key]) {
+                delete state.memorizedAyahs[key];
+            } else {
+                state.memorizedAyahs[key] = true;
+            }
+            localStorage.setItem('quran_memorized_v3', JSON.stringify(state.memorizedAyahs));
+            updateTahfidzBadge();
+            if (state.currentSurahData) renderAyahs(state.currentSurahData);
+        }
+
+        function updateTahfidzBadge() {
+            const count = Object.keys(state.memorizedAyahs).length;
+            const badge = document.getElementById('hafalan-badge-count');
+            if (badge) badge.textContent = count;
+        }
+
+        function openTahfidzModal() {
+            const count = Object.keys(state.memorizedAyahs).length;
+            const pct = ((count / 6236) * 100).toFixed(2);
+            document.getElementById('tahfidz-stats-text').textContent = `${count} / 6.236 Ayat (${pct}%)`;
+            document.getElementById('tahfidz-progress-bar').style.width = `${Math.min(100, pct)}%`;
+
+            const bySurah = {};
+            Object.keys(state.memorizedAyahs).forEach(k => {
+                const s = parseInt(k.split(':')[0], 10);
+                bySurah[s] = (bySurah[s] || 0) + 1;
+            });
+
+            const summaryEl = document.getElementById('memorized-surah-summary');
+            const entries = Object.entries(bySurah);
+            if (!entries.length) {
+                summaryEl.innerHTML = `<p class="text-xs text-slate-400 italic">Belum ada ayat yang ditandai hafal. Klik ikon centang pada kartu ayat untuk mencatat hafalan Anda.</p>`;
+            } else {
+                summaryEl.innerHTML = entries.map(([sNum, memCount]) => {
+                    const meta = state.surahs.find(s => s.number === Number(sNum));
+                    const total = meta ? meta.numberOfAyahs : '?';
+                    const name = meta ? meta.englishName : `Surah ${sNum}`;
+                    return `
+                        <div class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-emerald-950 flex items-center justify-between text-xs">
+                            <span class="font-bold">${sNum}. ${name}</span>
+                            <span class="px-2 py-0.5 rounded bg-emerald-600 text-white font-semibold">${memCount} / ${total} Ayat</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            const modal = document.getElementById('tahfidz-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function markCurrentSurahMemorized() {
+            if (!state.currentSurahData) return;
+            const s = state.currentSurahData;
+            for (let a = 1; a <= s.numberOfAyahs; a++) {
+                state.memorizedAyahs[`${s.number}:${a}`] = true;
+            }
+            localStorage.setItem('quran_memorized_v3', JSON.stringify(state.memorizedAyahs));
+            updateTahfidzBadge();
+            renderAyahs(s);
+            openTahfidzModal();
+        }
+
+        function resetMemorizedData() {
+            state.memorizedAyahs = {};
+            localStorage.removeItem('quran_memorized_v3');
+            updateTahfidzBadge();
+            if (state.currentSurahData) renderAyahs(state.currentSurahData);
+            openTahfidzModal();
+        }
+
+        function setLastRead(surahNum, ayahNum, pageNum) {
+            const meta = state.surahs.find(s => s.number === surahNum);
+            state.lastRead = {
+                surah: surahNum,
+                ayah: ayahNum,
+                page: pageNum || 1,
+                name: meta ? meta.englishName : `Surah ${surahNum}`
+            };
+            localStorage.setItem('quran_last_read_v3', JSON.stringify(state.lastRead));
+            updateLastReadUI();
+        }
+
+        function updateLastReadUI() {
+            const lbl = document.getElementById('last-read-label');
+            if (lbl && state.lastRead) {
+                lbl.textContent = `${state.lastRead.name} (${state.lastRead.surah}:${state.lastRead.ayah})`;
+            }
+        }
+
+        function jumpToLastRead() {
+            if (!state.lastRead) return;
+            if (state.viewMode === 'mushaf') {
+                loadMushafPage(state.lastRead.page || 1);
+            } else {
+                loadSurah(state.lastRead.surah, state.lastRead.ayah);
+            }
+        }
+
+        // =========================================================
+        // 11. UTILITY HELPERS
+        // =========================================================
+        function toArabicDigits(num) {
+            const arabicNums = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+            return String(num).replace(/\d/g, d => arabicNums[d]);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function escapeHtmlAttr(str) {
+            return escapeHtml(str);
+        }
+
+        function sanitizeTafsirHtml(html) {
+            if (!html) return '';
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+            temp.querySelectorAll('script, style, iframe, object, embed').forEach(el => el.remove());
+            return temp.innerHTML.replace(/\n/g, '<br>');
+        }
+
+        // Start Application Safely
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
+    </script>
+</body>
+</html>
